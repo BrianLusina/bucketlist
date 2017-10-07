@@ -4,12 +4,13 @@ This defines the application module that essentially creates a new flask app obj
 """
 import logging
 import os
+from datetime import datetime
 
 import jinja2
 from flask import Flask, g
 from flask_login import LoginManager, current_user
 from flask_sqlalchemy import SQLAlchemy
-from datetime import datetime
+
 from config import config
 
 # initialize objects of flask extensions that will be used and then initialize the application
@@ -92,6 +93,7 @@ def app_request_handlers(app, db_):
     database that is currently in use
     :param app: the current flask app
     """
+
     @app.before_request
     def before_request():
         """
@@ -155,6 +157,7 @@ def error_handlers(app):
     Error handlers function that will initialize error handling templates for the entire application
     :param app: the flask app
     """
+    from flask import render_template
 
     @app.errorhandler(404)
     def not_found(error):
@@ -163,10 +166,31 @@ def error_handlers(app):
         :return: a template instructing user they have sent a request that does not exist on
          the server
         """
+        app_logger.error('An error occurred during a request. Error => {}'.format(error))
+        return render_template("errors/404.html"), error
+
+    @app.errorhandler(500)
+    def server_error(e):
+        # Log the error and stacktrace.
+        app_logger.error('An error occurred during a request. Error => {}'.format(e))
+        return render_template("errors/500.html"), e
+
+    @app.errorhandler(403)
+    def error_403(error):
+        app_logger.error('An error occurred during a request. Error => {}'.format(e))
+        return render_template("errors/403.html"), error
+
+    @app.errorhandler(400)
+    def not_found(error):
+        app_logger.error('An error occurred during a request. Error => {}'.format(e))
+        return render_template('errors/400.html'), error
 
 
-def register_app_blueprints(app):
+def register_app_blueprints(app_):
     """
     Registers the application blueprints
-    :param app: the current flask app
+    :param app_: the current flask app
     """
+    from .mod_auth import auth
+
+    app_.register_blueprint(auth)
