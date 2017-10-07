@@ -60,27 +60,27 @@ class BaseTestCase(ContextTestCase):
         :return: 2 new unique users to test follow and unfollow feature
         """
 
-        user1_profile = UserProfile(first_name="test1", last_name="hadithi1",
-                                    email="test1hadithi@hadithi.com")
+        user1_profile = UserProfile(first_name="user1", last_name="userLastname",
+                                    email="user1@example.com")
 
-        user2_profile = UserProfile(first_name="test1", last_name="hadithi1",
-                                    email="test1hadithi@hadithi.com")
+        user2_profile = UserProfile(first_name="user2", last_name="user2LastName",
+                                    email="user2@example.com")
 
-        user1 = UserAccount(username="test1hadithi", email="test1hadithi@hadithi.com",
-                            password="password", registered_on=datetime.now())
-
-        user2 = UserAccount(username="test2hadithi", email="test2hadithi@hadithi.com",
-                            password="password", registered_on=datetime.now())
+        # user1 = UserAccount(username="test1hadithi", email="test1hadithi@hadithi.com",
+        #                     password="password", registered_on=datetime.now())
+        #
+        # user2 = UserAccount(username="test2hadithi", email="test2hadithi@hadithi.com",
+        #                     password="password", registered_on=datetime.now())
 
         try:
-            db.session.add(user1)
-            db.session.add(user2)
+            db.session.add(user1_profile)
+            db.session.add(user2_profile)
             db.session.commit()
         except IntegrityError as ie:
             print("Integrity Error: ", ie)
             db.session.rollback()
 
-        return user1, user2
+        return user1_profile, user2_profile
 
     def login(self):
         """
