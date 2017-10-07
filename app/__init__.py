@@ -196,6 +196,6 @@ def register_app_blueprints(app_):
     Registers the application blueprints
     :param app_: the current flask app
     """
-    from .mod_auth import auth
+    from app.mod_auth import auth
 
     app_.register_blueprint(auth)
