@@ -10,7 +10,7 @@ import jinja2
 from flask import Flask, g
 from flask_login import LoginManager, current_user
 from flask_sqlalchemy import SQLAlchemy
-
+from flask_mail import Mail
 from config import config
 
 # initialize objects of flask extensions that will be used and then initialize the application
@@ -20,6 +20,8 @@ db = SQLAlchemy()
 login_manager = LoginManager()
 login_manager.session_protection = "strong"
 login_manager.login_view = "auth.login"
+
+mail = Mail()
 app_logger = logging.getLogger("BucketListApiLogger")
 
 
@@ -79,6 +81,9 @@ def create_app(config_name):
     register_app_blueprints(app)
     app_request_handlers(app, db)
     app_logger_handler(app, config_name)
+
+    # initialize mail
+    mail.init_app(app)
 
     # this will reduce the load time for templates and increase the application performance
     app.jinja_env.cache = {}
@@ -177,12 +182,12 @@ def error_handlers(app):
 
     @app.errorhandler(403)
     def error_403(error):
-        app_logger.error('An error occurred during a request. Error => {}'.format(e))
+        app_logger.error('An error occurred during a request. Error => {}'.format(error))
         return render_template("errors/403.html"), error
 
     @app.errorhandler(400)
     def not_found(error):
-        app_logger.error('An error occurred during a request. Error => {}'.format(e))
+        app_logger.error('An error occurred during a request. Error => {}'.format(error))
         return render_template('errors/400.html'), error
 
 
