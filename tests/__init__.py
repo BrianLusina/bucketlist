@@ -89,7 +89,7 @@ class BaseTestCase(ContextTestCase):
         """
         return self.client.post(
             "auth/login",
-            data=dict(email='guydemaupassant@hadithi.com', password='password', confirm='password'),
+            data=dict(email='user@example.com', password='password', confirm='password'),
             follow_redirects=True
         )
 
