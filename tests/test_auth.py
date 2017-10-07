@@ -1,5 +1,6 @@
 from tests import BaseTestCase
 import app.mod_auth as auth
+from app.mod_auth.exceptions import UserAlreadyExists
 import json
 import unittest
 
@@ -19,9 +20,16 @@ class RegistrationTestCases(BaseTestCase):
 
     def test_registration_returns_201_when_user_data_is_posted(self):
         """Test POST request with data to registration returns 201 response"""
-        user = {'username': 'user1', 'password': 'user1_password'}
+        user = {'username': 'user3', 'password': 'user3_password', "email": "user3_email"}
         req = self.client.post('/auth/register/', data=user)
         self.assertEqual(req.status_code, 201)
+
+    def test_registration_raises_exception_when_user_exists(self):
+        """Test registration route raises Exception when user already exists"""
+        user = {'username': 'user2', 'password': 'user2_password', "email": "user2_email"}
+        with self.assertRaises(UserAlreadyExists) as context:
+            self.client.post('/auth/register/', data=user)
+            self.assertTrue(UserAlreadyExists.detail in context.exception)
 
 
 class LoginTestCases(BaseTestCase):
