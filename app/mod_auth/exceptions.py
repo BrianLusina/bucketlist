@@ -1,7 +1,7 @@
 """
 Custom exceptions for Auth module
 """
-from flask_api.exceptions import APIException
+from flask_api.exceptions import APIException, AuthenticationFailed
 
 
 class UserAlreadyExists(APIException):
