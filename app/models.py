@@ -1,7 +1,7 @@
 from abc import ABCMeta, abstractmethod
 
 from sqlalchemy import Column, Integer, DateTime, func
-
+from app.utils import makecls
 from . import db
 
 
@@ -9,7 +9,7 @@ class Base(db.Model):
     """
     Base class where all tables inherit from
     """
-    __metaclass__ = ABCMeta
+    __metaclass__ = makecls(ABCMeta)
     __abstract__ = True
     id = Column(Integer, primary_key=True, autoincrement=True)
     date_created = Column(DateTime, default=func.current_timestamp())

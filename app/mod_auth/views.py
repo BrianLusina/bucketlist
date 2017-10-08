@@ -2,8 +2,11 @@ from flask import request, jsonify
 
 from app import db
 from . import auth
-from .exceptions import UserAlreadyExists, CredentialsRequired, AuthenticationFailed
-from .models import UserAccount
+from .exceptions import UserAlreadyExists, CredentialsRequired
+from flask_api.exceptions import AuthenticationFailed, NotFound
+from .models import UserAccount, Session
+from flask_login import login_user, logout_user, login_required, current_user
+from .security_utils import generate_auth_token
 
 
 @auth.route('/login/', methods=["POST", "GET"])
@@ -22,9 +25,15 @@ def login():
         # check for password validity
         if user_account is not None:
             if user_account.verify_password(password):
+                token = generate_auth_token(username, password)
+                session = Session(user_id=user_account.id, token=token)
+                db.session.add(session)
+                db.session.commit()
+                login_user(user_account)
                 return jsonify({
                     "message": 'You have logged in successfully',
-                    "response": "Success"
+                    "response": "Success",
+                    'token': str(token)
                 })
             else:
                 raise AuthenticationFailed()
@@ -58,6 +67,7 @@ def register():
                 user_account = UserAccount(username=username, email=email, password=password)
                 db.session.add(user_account)
                 db.session.commit()
+                login_user(user_account)
                 return jsonify({
                     "message": "Registered successfully",
                     "more": "Login using POST to /auth/login/"
@@ -67,10 +77,21 @@ def register():
 
 
 @auth.route("/logout/", methods=["GET"])
+@login_required
 def logout():
     """
     Logout route, handles logging out of users
     :return: JSOn response informing client about status of logging out from service
     """
-    
-    pass
+    token = request.headers.get("Authorization")
+    session = Session.query.filter_by(token=token[7:]).first()
+    user_account = UserAccount.query.filter_by(id=current_user.id).first()
+
+    if user_account:
+        # db.session.delete(session)
+        logout_user()
+        return jsonify({
+            "message": "You have logged out successfully"
+        })
+    else:
+        raise NotFound()

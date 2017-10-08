@@ -199,6 +199,30 @@ class UserAccount(Base, UserMixin):
         self.password_hash = user["password"]
 
 
+class Session(Base):
+    """Maps to session table """
+
+    __tablename__ = 'sessions'
+    user_id = db.Column(db.Integer)
+    token = db.Column(db.String(256))
+
+    def __repr__(self):
+        return "Id:{} UserId: {}, Token:{}, dateCreated:{}".format(self.id, self.user_id,
+                                                                   self.token,
+                                                                   self.date_created)
+
+    def to_json(self):
+        return dict(id=self.id, user_id=self.user_id, token=self.token,
+                    date_created=self.date_created, date_modified=self.date_modified)
+
+    def from_json(self, session_):
+        session = json.loads(session_)
+        self.user_id = session["user_id"]
+        self.token = session["token"]
+
+
+
+
 # This callback is used to reload the user object from the user ID stored in the session
 @login_manager.user_loader
 def load_user(user_id):
