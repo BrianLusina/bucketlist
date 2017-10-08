@@ -1,6 +1,7 @@
 # BucketList API
 
-[![Build Status](https://travis-ci.org/BrianLusina/bucketlistapi.svg?branch=master)](https://travis-ci.org/gitgik/Bucket-list-app-API) [![Coverage Status](https://coveralls.io/repos/gitgik/Bucket-list-app-API/badge.svg?branch=master&service=github)](https://coveralls.io/github/gitgik/Bucket-list-app-API?branch=master) 
+[![Build Status](https://travis-ci.org/BrianLusina/bucketlist.svg?branch=master)](https://travis-ci.org/BrianLusina/bucketlist)
+[![codecov](https://codecov.io/gh/BrianLusina/bucketlist/branch/master/graph/badge.svg)](https://codecov.io/gh/BrianLusina/bucketlist)
 [![License](http://img.shields.io/:license-mit-blue.svg)](http://doge.mit-license.org)
 
 --------------------------------------------------
@@ -47,8 +48,9 @@ You need to initialize database and tables with credentials: username _bucketuse
 
 
 ```
-python manage.py createdb -t
+python manage.py user_add <email> <password>
 ```
+> insert <email> with your email and <password> with our password
 
 ### Start The Server
 Run the following command to start the server which listens at port 5000 for

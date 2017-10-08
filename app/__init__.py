@@ -197,5 +197,8 @@ def register_app_blueprints(app_):
     :param app_: the current flask app
     """
     from app.mod_auth import auth
+    from app.mod_bucketlist import bucketlist
 
     app_.register_blueprint(auth)
+    app_.register_blueprint(bucketlist)
+

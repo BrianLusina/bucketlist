@@ -2,10 +2,11 @@ import os
 import better_exceptions
 from flask_migrate import Migrate, MigrateCommand, upgrade
 from flask_script import Manager, Shell, Server
-from app import create_app, db
+from app import create_app, db, app_logger
 import alembic
 import alembic.config
 import click
+from sqlalchemy.exc import IntegrityError
 
 # create the application with given configuration from environment
 app = create_app(os.getenv("FLASK_CONFIG") or "default")
@@ -112,28 +113,28 @@ def init_db(migration):
 def user_add(email, password, admin=False):
     from app.mod_auth.models import UserAccount
     """add a user to the database"""
-    if admin:
-        roles = ["Admin"]
+    user_account = UserAccount.query.filter_by(email=email).first()
+    if user_account:
+        app_logger.error("User with email {} already exists".format(email))
     else:
-        roles = ["User"]
-    user = UserAccount()
-    # User.register(
-    #     email=email,
-    #     password=password,
-    #     confirmed=True,
-    #     roles=roles
-    # )
+        user = UserAccount(email=email, password=password, username=email)
+        try:
+            db.session.add(user)
+            db.session.commit()
+        except IntegrityError:
+            app_logger.exception("Failed to save user with email :{}".format(email))
 
 
 @manager.option('-e', '--email', help='email address', required=True)
 def user_del(email):
     """delete a user from the database"""
-    # obj = User.find(email=email)
-    # if obj:
-    #     obj.delete()
-    #     print("Deleted")
-    # else:
-    #     print("User not found")
+    from app.mod_auth.models import UserAccount
+    user_account = UserAccount.query.filter_by(email=email)
+    if user_account:
+        db.session.delete(user_account)
+        app_logger.info("User with email: {} deleted".format(email))
+    else:
+        app_logger.error("User with email: {} does not exist in DB".format(email))
 
 
 @manager.command
