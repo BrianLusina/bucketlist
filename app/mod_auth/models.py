@@ -2,13 +2,11 @@ from sqlalchemy import Column, String, Integer, DateTime, ForeignKey, Boolean
 from app.models import Base
 import uuid
 from werkzeug.security import generate_password_hash, check_password_hash
-from sqlalchemy.ext.declarative import declared_attr
 from flask_login import UserMixin
 from .. import db, login_manager
 from datetime import datetime
 from sqlalchemy.orm import relationship
 import json
-from time import gmtime
 from itsdangerous import TimedJSONWebSignatureSerializer as Serializer
 from flask import current_app
 
