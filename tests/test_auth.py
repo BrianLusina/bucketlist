@@ -1,8 +1,9 @@
-from tests import BaseTestCase
-import app.mod_auth as auth
-from app.mod_auth.exceptions import UserAlreadyExists
 import json
 import unittest
+
+import app.mod_auth as auth
+from app.mod_auth.exceptions import UserAlreadyExists, CredentialsRequired, AuthenticationFailed
+from tests import BaseTestCase
 
 
 class RegistrationTestCases(BaseTestCase):
@@ -33,49 +34,39 @@ class RegistrationTestCases(BaseTestCase):
 
 
 class LoginTestCases(BaseTestCase):
-    """ Tests correct user authentication """
+    """ Tests correct user login"""
 
-    @unittest.skip
-    def test_registration(self):
-        """Tests for correct user registration """
-        user = {'username': 'user1', 'password': 'password'}
-        req = self.client().get('/auth/register')
-        self.assertEqual(req.status_code, 200)
-        req = self.client().post('/auth/register', data=user)
-        self.assertEqual(req.status_code, 201)
-        self.assertIn('registered successfully', req.data)
-        # test for empty registration: respond with bad request
-        rv = self.client().post('/auth/register')
-        self.assertEqual(rv.status_code, 400)
+    def test_correct_logging_in_returns_200(self):
+        """Test login route returns 200"""
+        response = self.login()
+        self.assert200(response)
 
-    @unittest.skip
-    def test_user_already_exists(self):
-        """Tests for the already existing user """
-        user = {'username': 'Adelle', 'password': 'Hello'}
-        req = self.client().get('/auth/register')
-        req = self.client().post('/auth/register', data=user)
-        self.assertEqual(req.status_code, 201)
-        another_user = {'username': 'Adelle', 'password': 'Hello'}
-        another_req = self.client().get('/auth/register')
-        req = self.client().post('/auth/register', data=another_user)
-        self.assertNotEqual(another_req.status_code, 201)
+    def test_get_request_raises_credentials_required_error(self):
+        """Test GET request to login without credentials raises error"""
+        with self.assertRaises(CredentialsRequired) as context:
+            self.client.get("/auth/login/")
+            self.assertTrue(CredentialsRequired.detail in context.exception)
 
-    # ENDPOINT: POST '/auth/login'
-    @unittest.skip
-    def test_logging_in(self):
-        """Tests correct user login """
-        req = self.client().post('/auth/login', data=self.user)
-        self.assertEqual(req.status_code, 200)
-        self.assertIn(auth.SERVICE_MESSAGES['login'], req.data)
-        rv = self.client().get('/auth/login')
-        self.assertEqual(rv.status_code, 202)
-        # test for invalid credentials: respond with unauthorized
-        wrong_req = self.client().post(
-            '/auth/login',
-            data={'username': 'its-me', 'password': 'i have no idea'})
-        self.assertEqual(wrong_req.status_code, 401)
+    def test_get_request_with_correct_credentials_returns_response(self):
+        """Test GET request with correct credentials returns correct response"""
+        response = self.login()
+        self.assertIn(b'You have logged in successfully', response.data)
 
-    # ENDPOINT: GET '/auth/logout'
+    def test_incorrect_logging_in_returns_401(self):
+        """Tests incorrect user login will raise error"""
+        wrong_req = self.client.post('/auth/login/', data=dict(username="itsme",
+                                                               email="noclue@example.com",
+                                                               password="i have no idea"))
+        self.assert401(wrong_req)
+
+    def test_incorrect_credentials_raises_error(self):
+        """Tests incorrect user credentials raises error"""
+        with self.assertRaises(AuthenticationFailed) as context:
+            self.client.post('/auth/login/', data=dict(username="user1",
+                                                       email="user1@example.com",
+                                                       password="i have no idea"))
+            self.assertEqual(AuthenticationFailed.detail, context.exception)
+
     @unittest.skip
     def test_logging_out(self):
         """Test user correctly logging out"""
