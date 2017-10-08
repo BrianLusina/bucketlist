@@ -1,6 +1,5 @@
 import unittest
 from datetime import datetime
-
 from flask_testing import TestCase
 from sqlalchemy.exc import IntegrityError
 
@@ -95,8 +94,8 @@ class BaseTestCase(ContextTestCase):
         :return: The authenticated user for the test app
         """
         return self.client.post(
-            "auth/login/",
-            data=dict(email='user1@example.com', password='user1_password'),
+            "/auth/login/", data=dict(email='user1@example.com', username="user1",
+                                      password='user1_password'),
             follow_redirects=True
         )
 

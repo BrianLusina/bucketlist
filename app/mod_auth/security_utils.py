@@ -8,6 +8,9 @@ from itsdangerous import URLSafeTimedSerializer
 from flask import current_app
 from app import mail
 from flask_mail import Message
+import hashlib
+from datetime import datetime, timedelta
+import jwt
 
 
 def send_mail(to, subject, template):
@@ -50,3 +53,21 @@ def confirm_token(token):
             max_age=86400
         )
     return email
+
+
+def generate_auth_token(username, password):
+    """
+    Generates an auth token given a user's username and password, uses a secret key and
+    JWT tokens to generate
+    :param username: username of current logged in user
+    :param password: password of current logged in user
+    :return: JWT string
+    :rtype: str
+    """
+    hash_pass = hashlib.sha512(password.encode("UTF-8")).hexdigest()
+
+    user = dict(username=username,password=hash_pass)
+    user['exp'] = datetime.utcnow() + timedelta(minutes=60)
+    secret_key = current_app.config.get('SECRET_KEY')
+    jwt_string = jwt.encode(user, secret_key)
+    return jwt_string
