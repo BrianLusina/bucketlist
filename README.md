@@ -1,6 +1,6 @@
 # BucketList API
 
-[![Build Status](https://travis-ci.org/gitgik/Bucket-list-app-API.svg?branch=master)](https://travis-ci.org/gitgik/Bucket-list-app-API) [![Coverage Status](https://coveralls.io/repos/gitgik/Bucket-list-app-API/badge.svg?branch=master&service=github)](https://coveralls.io/github/gitgik/Bucket-list-app-API?branch=master) 
+[![Build Status](https://travis-ci.org/BrianLusina/bucketlistapi.svg?branch=master)](https://travis-ci.org/gitgik/Bucket-list-app-API) [![Coverage Status](https://coveralls.io/repos/gitgik/Bucket-list-app-API/badge.svg?branch=master&service=github)](https://coveralls.io/github/gitgik/Bucket-list-app-API?branch=master) 
 [![License](http://img.shields.io/:license-mit-blue.svg)](http://doge.mit-license.org)
 
 --------------------------------------------------

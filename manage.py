@@ -36,17 +36,14 @@ manager.add_command("db", MigrateCommand)
 manager.add_command("runserver", server)
 manager.add_command("publicserver", public_server)
 
-cov = None
-if os.environ.get('FLASK_COVERAGE'):
-    import coverage
-
-    cov = coverage.coverage(branch=True, include='app/*')
-    cov.start()
-
 
 @manager.command
 def test(cover=False):
     """Run the unit tests."""
+    import coverage
+    cov = coverage.coverage(branch=True, include='app/*')
+    cov.start()
+
     if cover and not os.environ.get('FLASK_COVERAGE'):
         import sys
         os.environ['FLASK_COVERAGE'] = '1'
@@ -55,10 +52,10 @@ def test(cover=False):
     import unittest
     tests = unittest.TestLoader().discover('tests')
     unittest.TextTestRunner(verbosity=2).run(tests)
-    if cov:
+    if cover:
         cov.stop()
         cov.save()
-        click.style(click.echo("Coverage Summary:"), fg="yellow", bg="black", bold=True)
+        print("Coverage Summary:")
 
         cov.report()
         basedir = os.path.abspath(os.path.dirname(__file__))
@@ -70,8 +67,8 @@ def test(cover=False):
         # generate xml report
         cov.xml_report()
 
-        click.style(click.echo("HTML version: file://{}/index.html".format(covdir)), fg="green", bg="black", bold=True)
-        click.style(click.echo("XML version: file://{}".format(basedir)), fg="green", bg="black", bold=True)
+        print("HTML version: file://{}/index.html".format(covdir))
+        print("XML version: file://{}".format(basedir))
         cov.erase()
 
 

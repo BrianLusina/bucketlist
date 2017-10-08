@@ -1,0 +1,18 @@
+language: python
+sudo: false
+python:
+  - '2.7'
+  - '3.6'
+
+cache: pip
+
+before_script:
+  - pip install -r requirements.txt
+
+script:
+  - python manage.py test
+  - python manage.py test --cover
+  - codecov
+
+after_success:
+  - bash <(curl -s https://codecov.io/bash)
