@@ -67,6 +67,7 @@ class LoginTestCases(BaseTestCase):
                                                        password="i have no idea"))
             self.assertEqual(AuthenticationFailed.detail, context.exception)
 
+    @unittest.skip
     def test_logging_out(self):
         """Test user correctly logging out"""
         get_res = self.client().post('/auth/login', data=self.user)
