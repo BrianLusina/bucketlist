@@ -5,6 +5,7 @@ from sqlalchemy.exc import IntegrityError
 
 from app import create_app, db
 from app.mod_auth.models import UserAccount, UserProfile
+from app.mod_bucketlist.models import BucketList, BucketListItem
 
 
 class ContextTestCase(TestCase):
@@ -45,6 +46,7 @@ class BaseTestCase(ContextTestCase):
         db.create_all()
 
         self.create_user_accounts()
+        self.create_bucket_lists()
 
         db.session.commit()
 
@@ -87,6 +89,28 @@ class BaseTestCase(ContextTestCase):
             db.session.rollback()
 
         return user1_account, user2_account
+
+    @staticmethod
+    def create_bucket_lists(self):
+        """Create bucket lists for each user account"""
+        user1, user2 = self.create_user_accounts()
+
+        bucket_list1 = BucketList(created_by=user1.id, name="User1 Bucketlist")
+        bucket_list2 = BucketList(created_by=user2.id, name="User2 Bucketlist")
+
+        db.session.add(bucket_list1)
+        db.session.add(bucket_list2)
+        db.session.commit()
+
+        for n in range(5):
+            bucket_list_items_1 = BucketListItem(bucketlist_id=bucket_list1.id,
+                                                 name="User1 Bucketlist Item {}".format(n))
+            db.session.add(bucket_list_items_1)
+
+            bucket_list_items_2 = BucketListItem(bucketlist_id=bucket_list2.id,
+                                                 name="User2 Bucketlist item {}".format(n))
+            db.session.add(bucket_list_items_2)
+        db.session.commit()
 
     def login(self):
         """
