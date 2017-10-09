@@ -1,11 +1,11 @@
 from flask import request, jsonify
+from flask_api.exceptions import AuthenticationFailed, NotFound
+from flask_login import login_user, logout_user, login_required, current_user
 
 from app import db
+from app.exceptions.handler import UserAlreadyExists, CredentialsRequired
 from . import auth
-from .exceptions import UserAlreadyExists, CredentialsRequired
-from flask_api.exceptions import AuthenticationFailed, NotFound
 from .models import UserAccount, Session
-from flask_login import login_user, logout_user, login_required, current_user
 from .security_utils import generate_auth_token
 
 

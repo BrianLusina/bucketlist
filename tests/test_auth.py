@@ -1,8 +1,10 @@
 import json
 import unittest
+
+from flask_api.exceptions import AuthenticationFailed
 from flask_login import current_user
-from app.mod_auth.exceptions import UserAlreadyExists, CredentialsRequired
-from flask_api.exceptions import AuthenticationFailed, NotFound
+
+from app.exceptions.handler import UserAlreadyExists, CredentialsRequired
 from tests import BaseTestCase
 
 

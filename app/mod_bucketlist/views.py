@@ -3,10 +3,12 @@ from flask import request
 from flask_api.exceptions import NotFound, PermissionDenied, AuthenticationFailed, ParseError
 from flask_login import login_required, current_user
 from .models import BucketList, BucketListItem
+from app.decorators.ownership import auth_required
 
 
 @bucketlist.route("", methods=["GET", "POST"])
 @login_required
+@auth_required
 def bucket_lists():
     """
     Get bucket lists for the given user
