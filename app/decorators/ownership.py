@@ -61,10 +61,11 @@ def auth_required(f):
         try:
             jwt_token = request.headers.get('Authorization')
             secret_key = current_app.config.get('SECRET_KEY')
-            print("Token =>", jwt_token)
 
             if jwt_token is None:
                 raise PermissionDenied("You need to pass your token as a header")
+
+            print("JWT token", jwt_token)
 
             try:
                 decoded_jwt = jwt.decode(jwt_token[7:], secret_key)

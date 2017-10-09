@@ -33,7 +33,7 @@ def login():
                 return jsonify({
                     "message": 'You have logged in successfully',
                     "response": "Success",
-                    'token': str(token)
+                    'token': token
                 })
             else:
                 raise AuthenticationFailed()

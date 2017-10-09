@@ -70,4 +70,4 @@ def generate_auth_token(username, password):
     user['exp'] = datetime.utcnow() + timedelta(minutes=60)
     secret_key = current_app.config.get('SECRET_KEY')
     jwt_string = jwt.encode(user, secret_key)
-    return jwt_string
+    return jwt_string.decode("utf-8")

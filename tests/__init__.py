@@ -110,7 +110,6 @@ class BaseTestCase(ContextTestCase):
         Login in the user to the testing app
         :return: The authenticated user for the test app
         """
-
         return self.client.post(
             "/auth/login/", data=dict(email='user1@example.com', username="user1",
                                       password='user1_pass'),
