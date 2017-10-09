@@ -61,10 +61,13 @@ def auth_required(f):
         try:
             jwt_token = request.headers.get('Authorization')
             secret_key = current_app.config.get('SECRET_KEY')
+            print("Token =>", jwt_token)
+
+            if jwt_token is None:
+                raise PermissionDenied("You need to pass your token as a header")
 
             try:
                 decoded_jwt = jwt.decode(jwt_token[7:], secret_key)
-                print("Decoded", decoded_jwt)
             except jwt.ExpiredSignatureError:
                 raise PermissionDenied('Your token has expired! Please login again')
             UserAccount.query.filter_by(
@@ -73,8 +76,7 @@ def auth_required(f):
             if not Session.query.filter_by(token=jwt_token[7:]):
                 raise AuthenticationFailed()
 
-        except (sqlalchemy.orm.exc.MultipleResultsFound,
-                sqlalchemy.orm.exc.NoResultFound):
+        except (sqlalchemy.orm.exc.MultipleResultsFound, sqlalchemy.orm.exc.NoResultFound):
             raise ValidationError()
         return f(*args, **kwargs)
     return decorated

@@ -15,7 +15,7 @@ def bucket_lists():
     :return: JSOn response with bucketlist items for authenticated users
     """
     user_id = current_user.id
-    result_date = None
+    result_data = None
 
     if request.method == "GET":
         results = BucketList.get_all(user_id)

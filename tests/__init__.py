@@ -71,12 +71,12 @@ class BaseTestCase(ContextTestCase):
         db.session.commit()
 
         user1_account = UserAccount(username="user1", email="user1@example.com",
-                                    password="user1_password",
+                                    password="user1_pass",
                                     registered_on=datetime.now(),
                                     user_profile_id=user1_profile.id)
 
         user2_account = UserAccount(username="user2", email="user2@example.com",
-                                    password="user2_password", registered_on=datetime.now(),
+                                    password="user2_pass", registered_on=datetime.now(),
                                     user_profile_id=user2_profile.id)
 
         bucket_list1 = BucketList(created_by=user1_account.id, name="User1 Bucketlist")
@@ -113,7 +113,7 @@ class BaseTestCase(ContextTestCase):
 
         return self.client.post(
             "/auth/login/", data=dict(email='user1@example.com', username="user1",
-                                      password='user1_password'),
+                                      password='user1_pass'),
             follow_redirects=True
         )
 
