@@ -219,8 +219,6 @@ class Session(Base):
         self.token = session["token"]
 
 
-
-
 # This callback is used to reload the user object from the user ID stored in the session
 @login_manager.user_loader
 def load_user(user_id):
