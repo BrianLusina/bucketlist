@@ -3,7 +3,11 @@ from flask_api.exceptions import AuthenticationFailed, NotFound
 from flask_login import login_user, logout_user, login_required, current_user
 
 from app import db
-from app.exceptions.handler import UserAlreadyExists, CredentialsRequired
+try:
+    from app.exceptions.handler import UserAlreadyExists, CredentialsRequired
+except ImportError:
+    from ..exceptions.handler import UserAlreadyExists, CredentialsRequired
+
 from . import auth
 from .models import UserAccount, Session
 from .security_utils import generate_auth_token
