@@ -9,7 +9,6 @@ __pycache__/
 coverage/
 # C extensions
 *.so
-
 # Distribution / packaging
 .Python
 build/
