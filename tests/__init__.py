@@ -2,7 +2,7 @@ import unittest
 from datetime import datetime
 from flask_testing import TestCase
 from sqlalchemy.exc import IntegrityError
-
+import json
 from app import create_app, db
 from app.mod_auth.models import UserAccount, UserProfile, Session
 from app.mod_bucketlist.models import BucketList, BucketListItem
@@ -116,6 +116,20 @@ class BaseTestCase(ContextTestCase):
             follow_redirects=True
         )
 
+    def get_jwt_token(self):
+        """
+        Gets JWT(JSON Web Token) token from the login response
+        :return: JWT token
+        :rtype: str
+        """
+        login_response = self.login()
+        login_data = json.loads(login_response.data.decode("utf-8"))
+        jwt_token = login_data.get("token")
+        return jwt_token
+
+    def get_headers(self):
+        """Returns headers to be used in POST requests"""
+        return {"Authorization": "Bearer {0}".format(self.get_jwt_token())}
 
 if __name__ == "__main__":
     unittest.main()
