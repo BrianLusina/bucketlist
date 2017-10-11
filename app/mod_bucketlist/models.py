@@ -62,7 +62,7 @@ class BucketListItem(Base):
             self.done = True
         else:
             self.done = False
-        db.session.commit()
+        # db.session.commit()
 
     def __repr__(self):
         return "Id: {}, bucketlist_id: {}, name: {}, done: {}".format(self.id, self.bucketlist_id, self.name, self.done)

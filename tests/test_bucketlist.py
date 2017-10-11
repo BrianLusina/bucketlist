@@ -1,6 +1,6 @@
 from tests import BaseTestCase
-from flask_api.exceptions import NotFound
 from flask_login import current_user
+from app.mod_bucketlist.exceptions import NullBucketListException, NullReferenceException
 import unittest
 import json
 from flask_api.exceptions import AuthenticationFailed, PermissionDenied, NotFound
@@ -104,6 +104,71 @@ class BucketListTestCase(BaseTestCase):
 
         # assert that the data is available
         self.assertIn('Swallow a python', response.data.decode("utf-8"))
+
+    def test_user_can_create_a_bucket_list(self):
+        """Tests that a user can create a bucket list"""
+        # setup
+        jwt_token = self.get_jwt_token()
+        headers = {"Authorization": "Bearer {0}".format(jwt_token)}
+        data = {"name": "Eat, Pray, Love, Sh*t"}
+
+        # post
+        post_response = self.client.post("/bucketlists/", data=data, headers=headers)
+
+        # assert
+        self.assertIn("bucketlist", post_response.data.decode("utf-8"))
+        self.assertEqual(post_response.status_code, 201)
+
+
+class BucketListByIdTestCases(BaseTestCase):
+    """Test cases for bucketlist route by id"""
+
+    def test_raises_error_on_non_existent_bucketlist(self):
+        """Test raises an error on a non-existent bucketlist item"""
+        with self.assertRaises(NullBucketListException) as ctx:
+            response = self.client.get("/bucketlists/4", headers=self.get_headers())
+            self.assert404(response)
+            self.assertTrue(NullBucketListException.detail, ctx.exception)
+            self.assertTrue(NullBucketListException.status_code, 404)
+
+    def test_user_can_delete_a_bucket_list_with_its_id(self):
+        """Test that a user can delete their bucket list given its id"""
+
+        # delete request
+        response = self.client.delete("/bucketlists/1", headers=self.get_headers())
+
+        # assert we get response of 200
+        self.assert200(response)
+        self.assertIn("Bucketlist was deleted successfully", response.data.decode("utf-8"))
+
+        # check that the bucket list is no more
+        with self.assertRaises(NullBucketListException) as ctx:
+            new_response = self.client.get("/bucketlists/4", headers=self.get_headers())
+            self.assert404(new_response)
+            self.assertTrue(NullBucketListException.detail, ctx.exception)
+            self.assertIn("No such bucketlist", new_response.data.decode("utf-8"))
+
+    def test_user_can_put_a_bucketlist(self):
+        """Test a user can edit a given bucket list item with its id"""
+        # put request to edit a given bucket list
+        response = self.client.put("/bucketlists/1", data={"name": "Eat! Eat a lot of food"},
+                                   headers=self.get_headers(),
+                                   )
+
+        # assert the request was a success
+        self.assertIn("Bucketlist edited successfully!", response.data.decode("utf-8"))
+        self.assert200(response)
+
+        # check that the same id 1, has a different bucket list item
+        results = self.client.get("/bucketlists/1", headers=self.get_headers())
+        self.assertIn("Eat! Eat a lot of food", results.data.decode("utf-8"))
+
+
+    # def test_user_can_get_their_created_bucket_list_by_id(self):
+    #     """Test that a user can get their bucketlist by a given id"""
+    #     response = self.client.get("/bucketlists/1", headers=self.get_headers())
+    #     self.assert200(response)
+    #     self.assertIn("User1 Bucketlist", response.data.decode("utf-8"))
 
 
 if __name__ == "__main__":

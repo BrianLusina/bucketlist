@@ -2,7 +2,7 @@ from flask import request, jsonify
 from flask_api.exceptions import NotFound
 from flask_login import login_required, current_user
 from sqlalchemy.exc import IntegrityError
-
+from .exceptions import NullBucketListException, NullReferenceException
 from app import db, app_logger
 from app.decorators.ownership import auth_required
 from . import bucketlist
@@ -78,3 +78,41 @@ def bucket_lists():
             }), 201
 
     return jsonify({})
+
+
+@bucketlist.route("<int:bucket_list_id>", methods=["GET", "PUT", "DELETE"])
+def edit_bucketlist(bucket_list_id, **kwargs):
+    """
+    Route that gets, edits or deletes a given bucketlist with its id.
+    :param bucket_list_id: id of the bucket list in question
+    :param kwargs: used when editing the given bucket list
+    :return: either the bucket list if it is a GET request, Success message if deletion is
+    successful or if editing has been successful
+    :rtype: dict
+    """
+    bucket_list = BucketList.query.get(bucket_list_id)
+
+    # if we can not get a bucket list, return an error message
+    if not bucket_list:
+        raise NullBucketListException()
+
+    if request.method == "DELETE":
+        db.session.delete(bucket_list)
+        db.session.commit()
+        return jsonify({
+            "message": "Bucketlist was deleted successfully"
+        }), 200
+
+    if request.method == "PUT":
+        name = request.values.get("name")
+        bucket_list.name = name
+        db.session.add(bucket_list)
+        db.session.commit()
+
+        return jsonify({
+            "message": "Bucketlist edited successfully!"
+        }), 200
+
+    # else we return the bucket list item
+    return jsonify(**bucket_list.to_json()), 200
+
