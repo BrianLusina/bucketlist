@@ -21,7 +21,7 @@ def owned_by_user(f):
     """
     @wraps(f)
     def decorated(*args, **kwargs):
-        bucketlist_id = kwargs.get('id')
+        bucketlist_id = kwargs.get('bucket_list_id')
         bucketlist = BucketList.query.get(int(bucketlist_id))
 
         if bucketlist.created_by != current_user.id:
