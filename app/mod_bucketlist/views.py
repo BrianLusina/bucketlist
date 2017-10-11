@@ -4,9 +4,10 @@ from flask_login import login_required, current_user
 from sqlalchemy.exc import IntegrityError
 from .exceptions import NullBucketListException, NullReferenceException
 from app import db, app_logger
-from app.decorators.ownership import auth_required
+from app.decorators.ownership import auth_required, owned_by_bucketlist, owned_by_user
 from . import bucketlist
-from .models import BucketList
+from .models import BucketList, BucketListItem
+import json
 
 
 @bucketlist.route("", methods=["GET", "POST"])
@@ -81,6 +82,8 @@ def bucket_lists():
 
 
 @bucketlist.route("<int:bucket_list_id>", methods=["GET", "PUT", "DELETE"])
+@login_required
+@auth_required
 def edit_bucketlist(bucket_list_id, **kwargs):
     """
     Route that gets, edits or deletes a given bucketlist with its id.
@@ -115,4 +118,32 @@ def edit_bucketlist(bucket_list_id, **kwargs):
 
     # else we return the bucket list item
     return jsonify(**bucket_list.to_json()), 200
+
+
+@bucketlist.route("<int:bucket_list_id>/items", methods=["POST", "GET"])
+@login_required
+@auth_required
+@owned_by_user
+def get_bucketlist_items(bucket_list_id):
+    """
+    Gets bucket list items for a particular bucket given its id. Handles POST and GET
+     requests,
+     POST requests will handle updating of a bucket list items and GET will handle the
+     retrieval of bucket list items
+    :param bucket_list_id: id of the bucket list to retrieve
+    :return: Bucket list items as a JSON response
+    :rtype: dict
+    """
+    bucketlist = BucketList.query.get(bucket_list_id)
+
+    if bucketlist is None:
+        raise NullBucketListException()
+
+    bucket_list_items = bucketlist.items
+
+    if request.method == "GET":
+        return jsonify({
+            "message": "{} bucket list items".format(bucketlist.name),
+            "items": [item.to_json() for item in bucket_list_items]
+        }), 200
 

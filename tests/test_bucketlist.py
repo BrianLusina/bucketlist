@@ -72,16 +72,12 @@ class BucketListTestCase(BaseTestCase):
             self.assertTrue("Please specify an integer for the limit request argument" in ctx)
             self.assertIsNotNone(ctx)
 
-    def test_bucket_list_route_raises_not_found_error_for_empty_buckets(self):
+    def test_bucket_list_route_for_non_existent_query_returns_empty_list(self):
         """Test that bucketlist route returns no bucket list message"""
-        login_response = self.login()
-        login_data = json.loads(login_response.data.decode("utf-8"))
-        jwt_token = login_data.get("token")
-        headers = {'Authorization': 'Bearer {0}'.format(jwt_token)}
         data = {"q": "Buy Gold Watch", "page": 5, "limit": 20}
-
-        response = self.client.get("/bucketlists/", headers=headers, query_string=data)
-        self.assertTrue("User has no bucket list" in response.data.decode("utf-8"))
+        response = self.client.get("/bucketlists/", headers=self.get_headers(),
+                                   query_string=data)
+        self.assertListEqual([], json.loads(response.data.decode("utf-8")).get("message"))
 
     def test_bucket_list_route_redirects_with_302_for_unauthenticated_users(self):
         """Test that bucketlist route redirects to login page with status code 302"""
@@ -164,11 +160,15 @@ class BucketListByIdTestCases(BaseTestCase):
         self.assertIn("Eat! Eat a lot of food", results.data.decode("utf-8"))
 
 
-    # def test_user_can_get_their_created_bucket_list_by_id(self):
-    #     """Test that a user can get their bucketlist by a given id"""
-    #     response = self.client.get("/bucketlists/1", headers=self.get_headers())
-    #     self.assert200(response)
-    #     self.assertIn("User1 Bucketlist", response.data.decode("utf-8"))
+class BucketListItemTestCases(BaseTestCase):
+    """Tests for a single bucketlist item"""
+
+    def test_user_can_get_their_bucketlist_items(self):
+        """Test that a user can get their bucket list items"""
+        response = self.client.get("/bucketlists/1/items", headers=self.get_headers())
+        self.assertIn("User1 Bucketlist Item 0", response.data.decode("utf-8"))
+        self.assertIn("User1 Bucketlist Item 1", response.data.decode("utf-8"))
+        self.assertIn("User1 Bucketlist Item 2", response.data.decode("utf-8"))
 
 
 if __name__ == "__main__":
