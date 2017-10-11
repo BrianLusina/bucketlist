@@ -114,5 +114,5 @@ def edit_bucketlist(bucket_list_id, **kwargs):
         }), 200
 
     # else we return the bucket list item
-    return jsonify( **bucket_list.to_json()), 200
+    return jsonify(**bucket_list.to_json()), 200
 
