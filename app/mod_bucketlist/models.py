@@ -62,10 +62,11 @@ class BucketListItem(Base):
             self.done = True
         else:
             self.done = False
-        db.session.commit()
+        # db.session.commit()
 
     def __repr__(self):
-        return "Id: {}, bucketlist_id: {}, name: {}, done: {}".format(self.id, self.bucketlist_id, self.name, self.done)
+        return str(dict(id=self.id, bucketlist_id=self.bucketlist_id, name=self.name,
+                        done=self.done))
 
     def to_json(self):
         return dict(

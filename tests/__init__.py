@@ -2,7 +2,7 @@ import unittest
 from datetime import datetime
 from flask_testing import TestCase
 from sqlalchemy.exc import IntegrityError
-
+import json
 from app import create_app, db
 from app.mod_auth.models import UserAccount, UserProfile, Session
 from app.mod_bucketlist.models import BucketList, BucketListItem
@@ -45,7 +45,7 @@ class BaseTestCase(ContextTestCase):
 
         db.create_all()
 
-        self.create_accounts()
+        self.create_bucket_list_items()
 
         db.session.commit()
 
@@ -54,11 +54,10 @@ class BaseTestCase(ContextTestCase):
         db.drop_all()
         self.app_context.pop()
 
-    @staticmethod
-    def create_accounts():
+    def create_user_profiles(self):
         """
-        Creates accounts with users bucket lists and bucket list items
-        :return: dictionary with the 2 new unique users to test
+        Creates user profiles
+        :return: tuple of user profiles
         """
 
         user1_profile = UserProfile(first_name="user1", last_name="user1Lastname",
@@ -70,6 +69,15 @@ class BaseTestCase(ContextTestCase):
         db.session.add(user2_profile)
         db.session.commit()
 
+        return user1_profile, user2_profile
+
+    def create_accounts(self):
+        """
+        Creates accounts with users bucket lists and bucket list items
+        :return: dictionary with the 2 new unique users to test
+        """
+        user1_profile, user2_profile = self.create_user_profiles()
+
         user1_account = UserAccount(username="user1", email="user1@example.com",
                                     password="user1_pass",
                                     registered_on=datetime.now(),
@@ -78,6 +86,18 @@ class BaseTestCase(ContextTestCase):
         user2_account = UserAccount(username="user2", email="user2@example.com",
                                     password="user2_pass", registered_on=datetime.now(),
                                     user_profile_id=user2_profile.id)
+        db.session.add(user2_account)
+        db.session.add(user1_account)
+        db.session.commit()
+
+        return user1_account, user2_account
+
+    def create_bucketlists(self):
+        """
+        Create bucket lists
+        :return: tuple of bucketlists
+        """
+        user1_account, user2_account = self.create_accounts()
 
         bucket_list1 = BucketList(created_by=user1_account.id, name="User1 Bucketlist")
         bucket_list2 = BucketList(created_by=user2_account.id, name="User2 Bucketlist")
@@ -85,6 +105,15 @@ class BaseTestCase(ContextTestCase):
         db.session.add(bucket_list1)
         db.session.add(bucket_list2)
         db.session.commit()
+
+        return bucket_list1, bucket_list2
+
+    def create_bucket_list_items(self):
+        """
+        Create bucket list items
+        :return: tuple of bucket list items
+        """
+        bucket_list1, bucket_list2 = self.create_bucketlists()
 
         for n in range(3):
             bucket_list_items_1 = BucketListItem(bucketlist_id=bucket_list1.id,
@@ -95,15 +124,9 @@ class BaseTestCase(ContextTestCase):
                                                  name="User2 Bucketlist item {}".format(n))
             db.session.add(bucket_list_items_2)
 
-        try:
-            db.session.add(user2_account)
-            db.session.add(user1_account)
-            db.session.commit()
-        except IntegrityError as ie:
-            print("Integrity Error: ", ie)
-            db.session.rollback()
+        db.session.commit()
 
-        return user1_account, bucket_list1, bucket_list1.items, user2_account, bucket_list2, bucket_list2.items
+        return bucket_list_items_1, bucket_list_items_2
 
     def login(self):
         """
@@ -116,6 +139,20 @@ class BaseTestCase(ContextTestCase):
             follow_redirects=True
         )
 
+    def get_jwt_token(self):
+        """
+        Gets JWT(JSON Web Token) token from the login response
+        :return: JWT token
+        :rtype: str
+        """
+        login_response = self.login()
+        login_data = json.loads(login_response.data.decode("utf-8"))
+        jwt_token = login_data.get("token")
+        return jwt_token
+
+    def get_headers(self):
+        """Returns headers to be used in POST requests"""
+        return {"Authorization": "Bearer {0}".format(self.get_jwt_token())}
 
 if __name__ == "__main__":
     unittest.main()
