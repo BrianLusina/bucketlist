@@ -1,9 +1,10 @@
-from tests import BaseTestCase
-from flask_login import current_user
-from app.mod_bucketlist.exceptions import NullBucketListException, NullReferenceException
-import unittest
 import json
-from flask_api.exceptions import AuthenticationFailed, PermissionDenied, NotFound
+import unittest
+from flask_api.exceptions import PermissionDenied, NotFound
+from faker import Faker
+from app.mod_bucketlist.exceptions import NullBucketListException, NullReferenceException
+from app.mod_bucketlist.models import BucketListItem, BucketList
+from tests import BaseTestCase
 
 
 class BucketListTestCase(BaseTestCase):
@@ -115,6 +116,54 @@ class BucketListTestCase(BaseTestCase):
         self.assertIn("bucketlist", post_response.data.decode("utf-8"))
         self.assertEqual(post_response.status_code, 201)
 
+    def test_user_can_search_bucketlists(self):
+        """Tests users can search for an existing bucketlist """
+        names = [
+            "Become a pythonista",
+            "Go out for a party",
+            "Make a drone",
+            "Make a comeback",
+        ]
+        for name in names:
+            self.client.post('/bucketlists/', data={"name": name},
+                             headers=self.get_headers())
+        # search for a bucketlist starting with "Make"
+        rv = self.client.get('/bucketlists/?q=Make', headers=self.get_headers())
+        self.assert200(rv)
+
+        results_data = json.loads(rv.data.decode("utf-8"))
+        results_length = len(results_data['message'])
+        self.assertEqual(results_length, 2)
+
+    def test_pagination_limit_and_range(self):
+        """Test bucketlist pagination"""
+        # ENDPOINT: GET /bucketlist?limit=20
+        faker = Faker()
+        rv = self.client.post('/bucketlists/', data={'name': 'Make a drone'},
+                              headers=self.get_headers())
+        self.assertEqual(rv.status_code, 201)
+
+        for i in range(0, 200):
+            self.client.post('/bucketlists/',data={'name': faker.bs()},
+                             headers=self.get_headers())
+        rv = self.client.get('/bucketlists/?limit=20', headers=self.get_headers())
+        rv_data = json.loads(rv.data.decode("utf-8"))
+        rv_length = len(rv_data['message'])
+
+        # Return 20 bucketlist items
+        self.assertEqual(rv_length, 20)
+        rvp = self.client.get('/bucketlists/?limit=1000', headers=self.get_headers())
+
+        # Returns only the first 100 records
+        self.assert200(rvp)
+
+        # Return 100 bucketlist items for limit > 100
+        rv_data = json.loads(rvp.data.decode("utf-8"))
+        rv_length = len(rv_data['message'])
+
+        # Return a maximum of 100 bucketlist items if limit > 100
+        self.assertEqual(rv_length, 100)
+
 
 class BucketListByIdTestCases(BaseTestCase):
     """Test cases for bucketlist route by id"""
@@ -169,6 +218,63 @@ class BucketListItemTestCases(BaseTestCase):
         self.assertIn("User1 Bucketlist Item 0", response.data.decode("utf-8"))
         self.assertIn("User1 Bucketlist Item 1", response.data.decode("utf-8"))
         self.assertIn("User1 Bucketlist Item 2", response.data.decode("utf-8"))
+        self.assert200(response)
+
+    def test_user_can_create_a_bucket_list_item(self):
+        """Test that a user can create a bucketlist item for a single bucketlist"""
+        data = {"name": "Buy a car"}
+        post_response = self.client.post("/bucketlists/1/items",
+                                         headers=self.get_headers(), data=data)
+        self.assertTrue(post_response.status_code, 201)
+        self.assertIn("BucketList item added successfully.",
+                      post_response.data.decode("utf-8"))
+        self.assertIn(data.get("name"), post_response.data.decode("utf-8"))
+
+        # check that the bucket list item exists in the db
+        get_response = self.client.get("/bucketlists/1/items", headers=self.get_headers())
+        self.assertIn(data.get("name"), get_response.data.decode("utf-8"))
+
+    def test_user_can_retrieve_bucket_list_items(self):
+        """Test user can retrieve bucketlist items by id"""
+        get_response = self.client.get("/bucketlists/1/items/1",
+                                       headers=self.get_headers())
+        self.assert200(get_response)
+        self.assertIn("User1 Bucketlist Item 0", get_response.data.decode("utf-8"))
+
+    def test_user_can_edit_bucket_list_items(self):
+        """Test that a user can edit bucketlist items by id"""
+        data = {"name": "User1 Bucketlist Item 1", "done": True}
+        put_response = self.client.put("/bucketlists/1/items/1",
+                                       headers=self.get_headers(), data=data)
+        self.assert200(put_response)
+        self.assertIn("Successfully edited bucketlist item",
+                      put_response.data.decode("utf-8"))
+
+        # check that the bucketlist item was modified
+        bucketlist_item = BucketListItem.query.get(1)
+        self.assertTrue(bucketlist_item.done)
+
+    def test_user_can_delete_a_bucketlist_item(self):
+        """Test that a user can delete a bucketlist item by id"""
+        delete_response = self.client.delete("/bucketlists/1/items/1",
+                                             headers=self.get_headers())
+
+        self.assert200(delete_response)
+        self.assertIn("Bucketlist item was successfully deleted",
+                      delete_response.data.decode("utf-8"))
+
+        with self.assertRaises(NullReferenceException) as ctx:
+            # try to fetch the resource
+            get_response = self.client.get("/bucketlists/1/items/1",
+                                           headers=self.get_headers())
+
+            self.assertIn("No such Item", get_response.data.decode("utf-8"))
+
+            # assert that the bucketlist item is not in db anymore
+            bucketlist_item = BucketListItem.query.get(1)
+            self.assertIsNone(bucketlist_item)
+            self.assertIn(NullReferenceException.detail, ctx.exception)
+            self.assert404(get_response)
 
 
 if __name__ == "__main__":

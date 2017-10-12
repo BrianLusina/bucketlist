@@ -37,7 +37,7 @@ def owned_by_bucketlist(f):
     """
     @wraps(f)
     def decorated(*args, **kwargs):
-        bucketlist_id = kwargs.get('id')
+        bucketlist_id = kwargs.get('bucket_list_id')
         bucketlistitem_id = kwargs.get('item_id')
         bucketlist_item = BucketListItem.query.get(int(bucketlistitem_id))
         if bucketlist_item:
