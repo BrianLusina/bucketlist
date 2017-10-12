@@ -124,7 +124,7 @@ def edit_bucketlist(bucket_list_id, **kwargs):
 @login_required
 @auth_required
 @owned_by_user
-def get_bucketlist_items(bucket_list_id):
+def create_or_get_bucketlist_items(bucket_list_id):
     """
     Gets bucket list items for a particular bucket given its id. Handles POST and GET
      requests,
@@ -147,3 +147,61 @@ def get_bucketlist_items(bucket_list_id):
             "items": [item.to_json() for item in bucket_list_items]
         }), 200
 
+    if request.method == "POST":
+        name = request.values.get("name")
+        bucketlist_item = BucketListItem(bucket_list_id, name)
+        db.session.add(bucketlist_item)
+        db.session.commit()
+
+        return jsonify({
+            "message": "BucketList item added successfully.",
+            "bucketlistitem": bucketlist_item.to_json()
+        }), 201
+
+
+@bucketlist.route("<int:bucket_list_id>/items/<int:item_id>", methods=["GET", "PUT",
+                                                                       "DELETE"])
+@login_required
+@owned_by_user
+@owned_by_bucketlist
+def get_modify_bucket_list_item(bucket_list_id, item_id, **kwargs):
+    """
+    Route handling modification of a bucketlist item for a given bucket list
+    Has decorators that ensure only logged in uses can access this route, that only users
+    who own this bucketlist can modify it and that this bucketlist item is owned by a give
+    bucketlist.
+    :param bucket_list_id: Bucketlist id
+    :param item_id: Item id for a given bucket list item
+    :return: Response for operation
+    :rtype: dict
+    """
+    bucket_list_item = BucketListItem.query.get(int(item_id))
+    bucketlist = BucketList.query.get(bucket_list_id)
+
+    if bucket_list_item is None:
+        raise NullReferenceException()
+
+    if request.method == "GET":
+        return jsonify({
+            "bucketlist": bucketlist.to_json(),
+            "bucketlist_item": bucket_list_item.to_json()
+        })
+
+    # editing a given bucket list item
+    if request.method == "PUT":
+        name = request.values.get("name")
+        done = request.values.get("done")
+        bucket_list_item.done = done
+
+        db.session.add(bucket_list_item)
+        db.session.commit()
+
+        return jsonify({
+            "message": "Successfully edited bucketlist item",
+            "bucketlist item": bucket_list_item.to_json()
+        }), 200
+
+    if request.method == "DELETE":
+        db.session.delete(bucket_list_item)
+        db.session.commit()
+        return jsonify({"message": "Bucketlist item was successfully deleted"}), 200
